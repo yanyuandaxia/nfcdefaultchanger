@@ -8,7 +8,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 
@@ -27,15 +26,18 @@ class LockScreenService : Service() {
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
 
-        // 注册广播接收器，监听锁屏（屏幕关闭）事件
+        // 注册广播接收器，监听屏幕关闭和开启（均与电源键操作相关）
         screenReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                if (intent?.action == Intent.ACTION_SCREEN_OFF) {
-                    executeCommand()
+                when (intent?.action) {
+                    Intent.ACTION_SCREEN_OFF, Intent.ACTION_SCREEN_ON -> executeCommand()
                 }
             }
         }
-        val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+        }
         registerReceiver(screenReceiver, filter)
     }
 
@@ -57,21 +59,19 @@ class LockScreenService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "锁屏监听服务",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "ACTION_SCREEN_ON/OFF monitoring service",
+            NotificationManager.IMPORTANCE_LOW
+        )
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.createNotificationChannel(channel)
     }
 
     private fun buildNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("锁屏监听服务")
-            .setContentText("正在监听锁屏事件")
+            .setContentTitle("ACTION_SCREEN_ON/OFF monitoring service")
+            .setContentText("Monitoring ACTION_SCREEN_ON/OFF event")
             .setSmallIcon(android.R.drawable.ic_lock_lock)
             .build()
     }

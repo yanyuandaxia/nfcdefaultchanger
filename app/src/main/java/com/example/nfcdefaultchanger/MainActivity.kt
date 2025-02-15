@@ -1,7 +1,6 @@
 package com.example.nfcdefaultchanger
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -60,7 +59,7 @@ fun ServiceToggleScreen(modifier: Modifier = Modifier) {
         )
         // 显示开关说明
         Text(
-            text = "Change default NFC app after enabling lock screen",
+            text = "Change default NFC app when screen ON/OFF",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(top = 16.dp)
         )
@@ -72,12 +71,7 @@ fun ServiceToggleScreen(modifier: Modifier = Modifier) {
                 // 将输入的包名称作为 Extra 传递给服务
                 serviceIntent.putExtra("extra_package_name", packageName)
                 if (checked) {
-                    // Android 8.0 及以上建议使用 startForegroundService
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        context.startForegroundService(serviceIntent)
-                    } else {
-                        context.startService(serviceIntent)
-                    }
+                    context.startForegroundService(serviceIntent)
                 } else {
                     context.stopService(serviceIntent)
                 }
